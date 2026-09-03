@@ -1,0 +1,182 @@
+mixed-port: 7890
+allow-lan: false
+mode: rule
+log-level: warning
+external-controller: '127.0.0.1:9090'
+unified-delay: true
+keep-alive-interval: 360
+cfw-bypass:
+    - localhost
+    - 127.*
+    - 10.*
+    - 192.168.*
+    - '<local>'
+dns:
+    enable: true
+    listen: '127.0.0.1:5334'
+    default-nameserver:
+      - 223.5.5.5
+      - 119.29.29.29
+    enhanced-mode: fake-ip
+    fake-ip-range: 198.18.0.1/16
+    use-hosts: true
+    use-system-hosts: true
+    nameserver:
+      - 'https://dns.google#🚀节点选择'
+      - 'https://cloudflare-dns.com#🚀节点选择'
+    nameserver-policy: 
+      'geosite:cn,apple,private': [223.5.5.5, 119.29.29.29, system] 
+    fake-ip-filter: ['*.lan', '*.localdomain', '*.example', '*.invalid', '*.localhost', '*.test', '*.local', '*.home.arpa', 'time.*.com', 'time.*.gov', 'time.*.edu.cn', 'time.*.apple.com', 'ntp.*.com', '*.time.edu.cn', '*.ntp.org.cn', '+.pool.ntp.org', '+.definition-meaning.top', '+.sfr-bouygues.cloud', '+.portail-offres.top', '+.bilivideo.com', '+.douyinvod.com', 'captive.apple.com', 'connect.rom.miui.com', 'www.msftconnecttest.com', 'wifi.vivo.com.cn', 'connectivitycheck.platform.hicloud.com', '+.feishu.cn', '+.dingtalk.com', '+.chat.bilibili.com', 'stun.*.*', 'stun.*.*.*']
+    proxy-server-nameserver: ['udp://127.0.0.1:5334']
+
+proxies:
+
+proxy-groups:
+
+  - name: "🚀 节点选择"
+    type: select
+    proxies:
+      - ♻️ 自动选择
+      - DIRECT
+  
+  - name: "♻️ 自动选择"
+    type: url-test
+    url: http://www.gstatic.com/generate_204
+    interval: 300
+    proxies:
+      
+
+  - name: "📢 谷歌服务"
+    type: select
+    proxies:
+      - 🚀 节点选择
+      
+
+  - name: "🎬 港台番剧"
+    type: select
+    proxies:
+      - DIRECT
+
+  - name: "🌍 国际媒体"
+    type: select
+    proxies:
+      - 🚀 节点选择
+
+  - name: "📲 电报代理"
+    type: select
+    proxies:
+      - 🚀 节点选择
+
+  - name: "🐟 漏网之鱼"
+    type: select
+    proxies:
+      - 🚀 节点选择
+      - DIRECT
+
+rule-providers:
+
+  Unbreak:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Unbreak.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Direct/Direct.yaml
+    interval: 86400
+
+  Advertising:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Guard/Advertising.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Advertising/Advertising.yaml
+    interval: 86400
+
+  Hijacking:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Guard/Hijacking.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Hijacking/Hijacking.yaml
+    interval: 86400
+
+  Privacy:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Guard/Privacy.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Privacy/Privacy.yaml
+    interval: 86400
+
+  Telegram:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Extra/Telegram/Telegram.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Telegram/Telegram.yaml
+    interval: 86400
+
+  Google:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Extra/Google.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Google/Google.yaml
+    interval: 86400
+
+  Streaming:
+    type: http
+    behavior: classical
+    path: ./RuleSet/StreamingMedia/Streaming.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/GlobalMedia/GlobalMedia.yaml
+    interval: 86400
+
+  StreamingSE:
+    type: http
+    behavior: classical
+    path: ./RuleSet/StreamingMedia/StreamingSE.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/ChinaMedia/ChinaMedia.yaml
+    interval: 86400
+
+  Global:
+    type: http
+    behavior: classical
+    path: ./RuleSet/Global.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/Global/Global.yaml
+    interval: 86400
+
+  China:
+    type: http
+    behavior: classical
+    path: ./RuleSet/China.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/China/China.yaml
+    interval: 86400
+
+  ChinaIP:
+    type: http
+    behavior: ipcidr
+    path: ./RuleSet/Extra/ChinaIP.yaml
+    url: https://cdn.jsdelivr.net/gh/blackmatrix7/ios_rule_script@master/rule/Clash/ChinaIPs/ChinaIPs_IP.yaml
+    interval: 86400
+
+rules:
+  # 拦截标准 WebRTC STUN 端口
+  - DST-PORT,3478,REJECT
+  - DST-PORT,19302,REJECT
+
+  - RULE-SET,Unbreak,DIRECT
+  - RULE-SET,Advertising,REJECT
+  - RULE-SET,Hijacking,REJECT
+  - RULE-SET,Privacy,REJECT
+  - RULE-SET,Global,🚀 节点选择
+  - RULE-SET,Google,📢 谷歌服务
+  - RULE-SET,StreamingSE,🎬 港台番剧
+  - RULE-SET,Streaming,🌍 国际媒体
+  - RULE-SET,Telegram,📲 电报代理
+  - DOMAIN,lens.l.google.com,🇺🇲 美国 AnyTLS
+  - RULE-SET,China,DIRECT
+  - IP-CIDR,192.168.0.0/16,DIRECT
+  - IP-CIDR,10.0.0.0/8,DIRECT
+  - IP-CIDR,172.16.0.0/12,DIRECT
+  - IP-CIDR,127.0.0.0/8,DIRECT
+  - IP-CIDR,100.64.0.0/10,DIRECT
+  - IP-CIDR,224.0.0.0/4,DIRECT
+  - IP-CIDR,fe80::/10,DIRECT
+  - IP-CIDR,119.28.28.28/32,DIRECT
+  - IP-CIDR,182.254.116.0/24,DIRECT
+  - RULE-SET,ChinaIP,DIRECT
+  - GEOIP,CN,DIRECT
+  - MATCH,🐟 漏网之鱼
