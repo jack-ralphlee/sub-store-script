@@ -2,21 +2,15 @@
 // 参数：name=Sub-Store 中的订阅名称
 // 组合订阅额外传入：type=组合订阅
 // 也可不用已保存订阅，改传：url=订阅链接
-
 const { name, type, url, includeUnsupportedProxy } = $arguments
 const parser = ProxyUtils.JSON5 || JSON
-
 let config
 try {
-  config = parser.parse($content ?? $files[0])
-} catch (error) {
+  config = parser.parse($content ?? $files[0]) } catch (error) {
   throw new Error(`模板不是合法 JSON/JSON5：${error.message ?? error}`)
 }
 
-const sourceType = /^1$|col|组合/i.test(type ?? '')
-  ? 'collection'
-  : 'subscription'
-
+const sourceType = /^1$|col|组合/i.test(type ?? '') ? 'collection' : 'subscription'
 if (!url && !name) {
   throw new Error('请在脚本参数中填写 Sub-Store 订阅名称：name')
 }
@@ -39,12 +33,9 @@ if (url) {
 }
 
 const generated = JSON.parse(await produceArtifact(artifactOptions))
-const nodeOutbounds = Array.isArray(generated.outbounds)
-  ? generated.outbounds
-  : []
-const nodeEndpoints = Array.isArray(generated.endpoints)
-  ? generated.endpoints
-  : []
+const nodeOutbounds = Array.isArray(generated.outbounds) ? generated.outbounds : []
+const nodeEndpoints = Array.isArray(generated.endpoints) ? generated.endpoints : []
+
 const nodeTags = [...nodeOutbounds, ...nodeEndpoints]
   .map(item => item && item.tag)
   .filter(Boolean)
@@ -57,6 +48,7 @@ if (!Array.isArray(config.outbounds)) {
   throw new Error('模板缺少 outbounds 数组')
 }
 
+// 修改此处：定义新的目标策略组标签
 const targetTags = new Set(['📦 sing-box', '🟢 自动-测速'])
 let matchedGroups = 0
 
@@ -72,6 +64,7 @@ if (matchedGroups !== targetTags.size) {
 
 const reservedTags = new Set(config.outbounds.map(item => item.tag))
 const collisions = nodeTags.filter(tag => reservedTags.has(tag))
+
 if (collisions.length > 0) {
   throw new Error(`节点名称与模板策略组重名：${[...new Set(collisions)].join('、')}`)
 }
