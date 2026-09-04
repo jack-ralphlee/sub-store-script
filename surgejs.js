@@ -48,16 +48,17 @@ function sectionRange(text, section) {
   return { start: bodyStart, end: next ? next.index : text.length }
 }
 
+// Sub-Store 在快捷脚本中通常返回纯节点列表；完整配置产物才带 [Proxy]。
 const generatedProxyRange = sectionRange(generated, 'Proxy')
-if (!generatedProxyRange) {
-  throw new Error('Sub-Store 未生成 Surge 的 [Proxy] 节点区段')
-}
+const generatedProxyText = generatedProxyRange
+  ? generated.slice(generatedProxyRange.start, generatedProxyRange.end)
+  : generated
 
-const proxyLines = generated
-  .slice(generatedProxyRange.start, generatedProxyRange.end)
+const proxyLines = generatedProxyText
   .split(/\r?\n/)
   .map(line => line.trim())
-  .filter(line => line && !line.startsWith('#') && /^[^=]+\s*=\s*[^,]+/.test(line))
+  .filter(line => line && !line.startsWith('#') && !/^\[.+\]$/.test(line))
+  .filter(line => /^[^=]+\s*=\s*(ss|ssr|vmess|trojan|vless|http|https|socks5|socks5-tls|snell|hysteria2|tuic|wireguard|external)\s*,/i.test(line))
 
 const nodeNames = proxyLines.map(line => line.slice(0, line.indexOf('=')).trim())
 if (!nodeNames.length) {
