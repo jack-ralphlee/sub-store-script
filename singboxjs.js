@@ -49,11 +49,7 @@ if (!Array.isArray(config.outbounds)) {
 }
 
 // 修改此处：定义新的目标策略组标签
-const targetTags = new Set([
-  '📦 sing-box',
-  '🟢 自动-测速',
-  '📺 StreamingME'
-])
+const targetTags = new Set(['📦 sing-box', '🟢 自动-测速'])
 let matchedGroups = 0
 
 for (const outbound of config.outbounds) {
@@ -63,9 +59,7 @@ for (const outbound of config.outbounds) {
 }
 
 if (matchedGroups !== targetTags.size) {
-  throw new Error(
-    '模板必须同时包含“📦 sing-box”、“🟢 自动-测速”和“📺 StreamingME”三个策略组'
-  )
+  throw new Error('模板必须同时包含“📦 sing-box”和“🟢 自动-测速”两个策略组')
 }
 
 const reservedTags = new Set(config.outbounds.map(item => item.tag))
