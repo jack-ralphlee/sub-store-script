@@ -28,7 +28,7 @@ const artifactOptions = {
   },
 }
 
-// 【新增逻辑】获取图3中填写的远程订阅链接
+// 【新增/修正逻辑】获取图3中填写的远程订阅链接
 let targetUrl = url
 if (url) {
   artifactOptions.subscription = {
@@ -37,21 +37,29 @@ if (url) {
     source: 'remote',
   }
 } else if (name) {
-  // 如果仅传入了 name，尝试从 Sub-Store 内部缓存中拉取对应订阅的原始链接
+  // 尝试从 Sub-Store 标准内部缓存结构中拉取对应订阅的原始链接
   try {
-    const subCache = $substore.cache.subs[name]
-    if (subCache && subCache.url) {
-      targetUrl = subCache.url
+    const subs = $substore.cache?.subscriptions
+    if (Array.isArray(subs)) {
+      const sub = subs.find(s => s.name === name)
+      if (sub && sub.url) targetUrl = sub.url
+    } else if (subs && typeof subs === 'object' && subs[name]) {
+      targetUrl = subs[name].url
     }
   } catch (e) {
-    console.log('无法从缓存获取订阅链接', e)
+    console.log('自动获取订阅链接失败', e)
   }
+}
+
+// 如果图3中填写了多行内容，Surge 的 policy-path 只能接受单条链接，这里取第一条有效 http 链接
+if (targetUrl) {
+  targetUrl = targetUrl.split(/\r?\n/).find(line => line.trim().startsWith('http')) || targetUrl.trim()
 }
 
 // 获取生成的 Surge 节点
 const generated = await produceArtifact(artifactOptions)
 
-// 辅助函数：定位 Surge 配置的区段（如 [Proxy]、[Proxy Group]）
+// 辅助函数：定位 Surge 配置的区段
 function findSection(text, sectionName) {
   const pattern = new RegExp(`^\\s*\\[${sectionName}\\]\\s*$`, 'im')
   const startMatch = pattern.exec(text)
@@ -120,7 +128,7 @@ const firstSetting = originalItems.findIndex(item => /^[a-z-]+\s*=/.test(item))
 const originalNodes = firstSetting === -1 ? originalItems : originalItems.slice(0, firstSetting)
 const settings = firstSetting === -1 ? [] : originalItems.slice(firstSetting)
 
-// 【核心修改】将原来的 filter 改为 map：动态替换 policy-path 链接，同时保留 update-interval 等配置供 Surge 本地使用
+// 动态替换 policy-path 链接，保留其余配置
 const allowedSettings = settings.map(s => {
   if (s.startsWith('policy-path')) {
     return `policy-path=${targetUrl || '获取链接失败_请检查SubStore订阅'}`
