@@ -92,8 +92,8 @@ if (collisions.length > 0) {
   throw new Error(`节点名称与模板策略组重名：${[...new Set(collisions)].join('、')}`)
 }
 
-// ==================== 4. 核心逻辑：重构 [Proxy Group] ====================
-// 精准定位到等号及前面的空格
+// ==================== 4. 核心逻辑：重构 [Proxy Group]（修正类型关键字缺失问题） ====================
+// 正则微调：只匹配到等号，保留后面的 select 作为内容处理
 const groupPattern = /^(\s*✈️ 我的节点\s*=\s*)(.*)$/m
 const groupMatch = groupPattern.exec(groupText)
 if (!groupMatch) {
@@ -102,6 +102,7 @@ if (!groupMatch) {
 
 // 分离原策略组中的控制参数
 const originalItems = groupMatch[2].split(',').map(item => item.trim()).filter(Boolean)
+// 过滤掉旧的节点名以及 select，只留下 icon-url 等 key=value 形式的参数
 const settings = originalItems.filter(item => /^[a-z-]+\s*=/.test(item))
 const allowedSettings = settings.filter(s => 
   !s.startsWith('policy-path') && !s.startsWith('update-interval') && !s.startsWith('no-alert') && !s.startsWith('include-all-proxies')
@@ -113,13 +114,14 @@ const targetPath = url || (sourceType === 'collection'
   : `/download/${encodeURIComponent(name)}?target=Surge`
 )
 
-// 组装参数：外部托管地址 + 24小时更新 + 继承的原有UI参数
+// 组装参数：外部托管地址 + 24小时更新 + 继承的UI参数
 allowedSettings.unshift(`policy-path=${targetPath}`, `update-interval=86400`)
 
-// 【修复核心】补齐 select 关键字，使策略组变为规范合法的外部订阅组格式
+// 【修复点】显式加上 select 关键字，确保符合 Surge 的策略组语法
 const newGroupLine = `${groupMatch[1]}select, ${allowedSettings.join(', ')}`
 const updatedGroups = groupText.replace(groupMatch[0], newGroupLine)
 config = config.slice(0, groupSection.start) + updatedGroups + config.slice(groupSection.end)
+
 
 // ==================== 5. 核心逻辑：仅将自建节点注入到 [Proxy] 区块 ====================
 if (localProxyLines.length > 0) {
