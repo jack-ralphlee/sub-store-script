@@ -1,4 +1,4 @@
-// Sub-Store Surge 智能分流注入脚本
+// Sub-Store Surge 智能分流注入脚本 (修复策略组语法版)
 // 机场订阅 -> 外部托管 (policy-path)；本地自建节点 -> 仅注入 [Proxy]
 // 参数：
 // name = 机场订阅/组合订阅名称
@@ -92,15 +92,16 @@ if (collisions.length > 0) {
   throw new Error(`节点名称与模板策略组重名：${[...new Set(collisions)].join('、')}`)
 }
 
-// ==================== 4. 核心逻辑：重构 [Proxy Group]（彻底移除任何节点名追加） ====================
-const groupPattern = /^(\s*✈️ 我的节点\s*=\s*)(select\s*,?)(.*)$/m
+// ==================== 4. 核心逻辑：重构 [Proxy Group] ====================
+// 精准定位到等号及前面的空格
+const groupPattern = /^(\s*✈️ 我的节点\s*=\s*)(.*)$/m
 const groupMatch = groupPattern.exec(groupText)
 if (!groupMatch) {
-  throw new Error('模板 [Proxy Group] 中缺少“✈️ 我的节点 = select”策略组')
+  throw new Error('模板 [Proxy Group] 中缺少“✈️ 我的节点”策略组')
 }
 
 // 分离原策略组中的控制参数
-const originalItems = groupMatch[3].split(',').map(item => item.trim()).filter(Boolean)
+const originalItems = groupMatch[2].split(',').map(item => item.trim()).filter(Boolean)
 const settings = originalItems.filter(item => /^[a-z-]+\s*=/.test(item))
 const allowedSettings = settings.filter(s => 
   !s.startsWith('policy-path') && !s.startsWith('update-interval') && !s.startsWith('no-alert') && !s.startsWith('include-all-proxies')
@@ -112,11 +113,11 @@ const targetPath = url || (sourceType === 'collection'
   : `/download/${encodeURIComponent(name)}?target=Surge`
 )
 
-// 组装参数：外部托管地址 + 24小时更新 + 继承的UI参数
+// 组装参数：外部托管地址 + 24小时更新 + 继承的原有UI参数
 allowedSettings.unshift(`policy-path=${targetPath}`, `update-interval=86400`)
 
-// 最终这一行后面不包含任何“节点A、节点B、自建节点”，只含有 policy-path 参数
-const newGroupLine = `${groupMatch[1]}${allowedSettings.join(', ')}`
+// 【修复核心】补齐 select 关键字，使策略组变为规范合法的外部订阅组格式
+const newGroupLine = `${groupMatch[1]}select, ${allowedSettings.join(', ')}`
 const updatedGroups = groupText.replace(groupMatch[0], newGroupLine)
 config = config.slice(0, groupSection.start) + updatedGroups + config.slice(groupSection.end)
 
